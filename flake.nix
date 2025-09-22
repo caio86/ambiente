@@ -36,6 +36,7 @@
             if [ ! -d ./.venv ]; then
               python3 -m venv .venv
               source ./.venv/bin/activate
+              pip install "jinja2<3.1"
               pip install "ansible==2.9.0"
             else
               source ./.venv/bin/activate
