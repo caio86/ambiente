@@ -23,26 +23,28 @@
         );
     in
     {
-      devShells = forAllSystems (pkgs: {
-        default = pkgs.mkShell {
-          packages = with pkgs; [
-            vagrant
-            python39
-          ];
+      devShells = forAllSystems (
+        pkgs:
+        let
+          python = pkgs.python39;
+        in
+        {
+          default = pkgs.mkShell {
+            packages = with pkgs; [ python ];
 
-          env = { };
+            env = {
+              VENV_DIR = "./.venv";
+            };
 
-          shellHook = ''
-            if [ ! -d ./.venv ]; then
-              python3 -m venv .venv
+            shellHook = ''
+              if [ ! -d $VENV_DIR ]; then
+                ${python}/bin/python -m venv $VENV_DIR
+              fi
+
               source ./.venv/bin/activate
-              pip install "jinja2<3.1"
-              pip install "ansible==2.9.0"
-            else
-              source ./.venv/bin/activate
-            fi
-          '';
-        };
-      });
+            '';
+          };
+        }
+      );
     };
 }
