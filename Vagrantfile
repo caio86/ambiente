@@ -3,7 +3,6 @@
 
 Vagrant.configure("2") do |config|
   config.vm.box = "bento/debian-12"
-  config.vm.synced_folder ".", "/vagrant", disabled: true
 
   config.vm.provider "virtualbox" do |v|
     v.memory = 1024
@@ -14,8 +13,6 @@ Vagrant.configure("2") do |config|
     s.vm.box = "leandrocalmeida/bmv2-p4"
     s.vm.box_version = "03"
     s.vm.hostname = "s1"
-
-    s.vm.synced_folder ".", "/vagrant", disabled: false
 
     s.vm.network "private_network", ip: "192.168.56.254"
 
