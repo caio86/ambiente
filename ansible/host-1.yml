@@ -21,7 +21,10 @@
       become: yes
 
     - name: create pcap dir
-      command: mkdir -p /vagrant/pcap
+      file:
+        path: "/vagrant/code"
+        state: directory
+        mode: "0755"
       become: yes
 
     - name: start tcpdump

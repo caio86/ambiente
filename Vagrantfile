@@ -32,7 +32,7 @@ Vagrant.configure("2") do |config|
     end
   end
 
-  (1..2).each do |i|
+  (1..2).reverse_each do |i|
     config.vm.define "h#{i}" do |h|
       h.vm.hostname = "h#{i}"
       h.vm.network "private_network", ip: "192.168.56.#{100+i}", mac: "0800881122#{10+i}",
