@@ -1,0 +1,51 @@
+---
+- hosts: all
+
+  vars:
+    server_port: 8080
+    test_file: png_5MB.png
+
+  tasks:
+    - name: Install curl
+      become: yes
+      apt:
+        name: "{{ item }}"
+        update_cache: yes
+        state: present
+      loop:
+        - curl
+
+    - name: Adjust arp table
+      command: arp -i eth1 -s 192.168.56.102 080088112212
+      become: yes
+
+    - name: Create Script
+      copy:
+        content: |
+          SERVER_URL="http://192.168.56.102:{{ server_port }}/{{ test_file }}"
+          LOG_FILE="/tmp/client-requests.log"
+
+          echo "Starting client"
+          echo "Timestamp,Status Code,Response Time,Response" > $LOG_FILE
+
+          while true; do
+            TIMESTAMP=$(date '+%Y-%m-%d %H:%M:%S')
+            RESPONSE=$(curl -o /tmp/output -s -w "%{http_code}\n%{time_total}" $SERVER_URL)
+            HTTP_CODE=$(echo $RESPONSE | awk '{print $1}')
+            RESPONSE_TIME=$(echo $RESPONSE | awk '{print $2 }')
+
+            echo "$TIMESTAMP,$HTTP_CODE,$RESPONSE_TIME" >> $LOG_FILE
+            echo "[$TIMESTAMP] HTTP $HTTP_CODE - ${RESPONSE_TIME}s"
+
+            sleep .5
+          done
+        dest: /tmp/client_requester.sh
+        mode: "0755"
+
+    - name: Start client requester as background process
+      command: >
+        nohup /tmp/client_requester.sh > /tmp/request-output.log 2>&1 &
+      async: 3600
+      poll: 0
+      register: client_process
+      changed_when: false
