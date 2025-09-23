@@ -1,3 +1,5 @@
 .direnv
 .vagrant
 .venv
+.bmv
+vagrant-ssh

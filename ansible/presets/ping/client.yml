@@ -2,18 +2,16 @@
 - hosts: all
 
   vars:
-    cap_file: packet_capture_{{ ansible_hostname }}_{{ ansible_date_time['epoch'] }}.pcap
+    cap_file: ping_{{ ansible_hostname }}_{{ ansible_date_time['epoch'] }}.pcap
 
   tasks:
-    - name: Install python-Scapy and dependencies
+    - name: Install tcpdump
       become: yes
       apt:
         name: "{{ item }}"
         update_cache: yes
         state: present
       loop:
-        - python3-scapy
-        - net-tools
         - tcpdump
 
     - name: Adjust arp table
@@ -22,13 +20,13 @@
 
     - name: create pcap dir
       file:
-        path: "/vagrant/code"
+        path: "/vagrant/pcap"
         state: directory
         mode: "0755"
       become: yes
 
     - name: start tcpdump
-      command: tcpdump -i eth1 -w /vagrant/pcap/{{ cap_file }} src host 192.168.56.102
+      command: tcpdump -i eth1 -w /vagrant/pcap/{{ cap_file }} src host 192.168.56.101
       async: 3600
       poll: 0
       changed_when: false
