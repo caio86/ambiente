@@ -2,57 +2,51 @@
 - hosts: all
 
   vars:
-    cap_file: packet_capture_{{ ansible_hostname }}_{{ ansible_date_time['epoch'] }}.pcap
+    server_port: 8080
+    test_file: png_5MB.png
 
   tasks:
-    - name: Install python-Scapy and dependencies
+    - name: Install curl
       become: yes
       apt:
         name: "{{ item }}"
         update_cache: yes
         state: present
       loop:
-        - python3-scapy
-        - net-tools
-        - tcpdump
+        - curl
 
     - name: Adjust arp table
       command: arp -i eth1 -s 192.168.56.102 080088112212
       become: yes
 
-    - name: create pcap dir
-      file:
-        path: "/vagrant/code"
-        state: directory
-        mode: "0755"
-      become: yes
+    - name: Create Script
+      copy:
+        content: |
+          SERVER_URL="http://192.168.56.102:{{ server_port }}/{{ test_file }}"
+          LOG_FILE="/tmp/client-requests.log"
 
-    - name: start tcpdump
-      command: tcpdump -i eth1 -w /vagrant/pcap/{{ cap_file }} src host 192.168.56.102
+          echo "Starting client"
+          echo "Timestamp,Status Code,Response Time,Response" > $LOG_FILE
+
+          while true; do
+            TIMESTAMP=$(date '+%Y-%m-%d %H:%M:%S')
+            RESPONSE=$(curl -o /tmp/output -s -w "%{http_code}\n%{time_total}" $SERVER_URL)
+            HTTP_CODE=$(echo $RESPONSE | awk '{print $1}')
+            RESPONSE_TIME=$(echo $RESPONSE | awk '{print $2}')
+
+            echo $RESPONSE
+            echo "$TIMESTAMP,$HTTP_CODE,$RESPONSE_TIME" >> $LOG_FILE
+            echo "[$TIMESTAMP] HTTP $HTTP_CODE - ${RESPONSE_TIME}s"
+
+            sleep .5
+          done
+        dest: /tmp/client_requester.sh
+        mode: "0755"
+
+    - name: Start client requester as background process
+      command: >
+        nohup /tmp/client_requester.sh > /tmp/request-output.log 2>&1 &
       async: 3600
       poll: 0
+      register: client_process
       changed_when: false
-      become: yes
-
-    - name: wait for tcpdump
-      pause:
-        seconds: 2
-
-    - name: make ping
-      command: ping -c 4 192.168.56.102
-      ignore_errors: true
-      register: ping_result
-
-    - name: Show ping results
-      debug:
-        var: ping_result.stdout_lines
-
-    - name: wait for tcpdump
-      pause:
-        seconds: 2
-
-    - name: Stop tcpdump process
-      shell: pkill tcpdump
-      ignore_errors: true
-      changed_when: false
-      become: yes
