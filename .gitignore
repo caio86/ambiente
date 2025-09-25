@@ -2,4 +2,4 @@
 .vagrant
 .venv
 .bmv
-vagrant-ssh
+ssh_config
