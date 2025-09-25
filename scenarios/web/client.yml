@@ -11,3 +11,11 @@
       loop:
         - curl
         - tcpdump
+
+    - name: Run client
+      script: ./runner.sh
+      register: client
+
+    - name: Print output
+      debug:
+        var: client.stdout_lines
