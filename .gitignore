@@ -1,5 +1,6 @@
 .direnv
 .vagrant
 .venv
+.python-version
 .bmv
 ssh_config
