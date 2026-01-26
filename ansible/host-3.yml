@@ -45,7 +45,7 @@
       ansible.builtin.lineinfile:
         path: "/home/vagrant/wave/run_wave.sh"
         regexp: '^TARGET=*'
-        line: 'TARGET="http://192.168.56.102/videos/worldcup2002-mp4.mpd"'
+        line: 'TARGET="192.168.56.102"'
         backrefs: true
 
     - name: Configure Loadgen Location
@@ -70,3 +70,8 @@
         line: 'X11DisplayOffset 10'
         backrefs: true
       become: yes
+
+    - name: copy sinusoid.py
+      copy:
+        src: ./sinusoid.py
+        dest: /home/vagrant/wave/loadGen/sinusoid/sinusoid.py
